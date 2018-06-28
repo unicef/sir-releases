@@ -1,0 +1,50 @@
+version: '2.1'
+
+services:
+  proxy:
+    build:
+      context: ./proxy
+      dockerfile: ./Dockerfile
+    image: sirpocdev/sirpoc-proxy:dev
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+      - frontend
+#    command: bash -c "./docker-entrypoint.sh && nginx -g 'daemon off;'${NX_CONFIG}"
+
+  backend:
+    build:
+      context: ./sir-poc
+      dockerfile: ./docker/Dockerfile.dev
+    image: sirpocdev/sirpoc-backend:dev
+    environment:
+      DATABASE_URL: postgres://postgres:@db:5432/sir
+      DEBUG: 1
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./sir-poc:/code"
+      - "./volumes/backend/var/sir/:/var/sir"
+    depends_on:
+      - db
+
+  db:
+    build:
+      context: ./db
+      dockerfile: ./Dockerfile
+    image: sirpocdev/sirpoc-db:dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: sir
+    volumes:
+      - "./volumes/db/data:/var/lib/postgresql/data"
+
+  frontend:
+    build:
+      context: ./sir-poc-fe
+      dockerfile: ./Dockerfile.dev
+    image: sirpocdev/sirpoc-frontend:dev
+    volumes:
+      - "./sir-poc-fe:/code"
+    command: polymer serve -H 0.0.0.0 -p 8080

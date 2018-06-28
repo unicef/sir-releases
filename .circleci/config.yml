@@ -1,0 +1,58 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/code
+    docker:
+      - image: docker:17.06.1-ce-git
+#      - image: python3:alpine
+    steps:
+      - checkout
+      - run:
+          name: build
+          command: |
+            set -x
+            apk update && apk add curl curl-dev bash jq sed
+            . update.sh
+            docker build
+                    --build-arg GITHUB_CREDENTIALS=${GITHUB_CREDENTIALS} \
+                    -t unicef/sir-backend:${BACKEND_VERSION} \
+                    -f Dockerfile .
+            docker images
+
+#    docker:
+#      - image: circleci/python:3.6
+#        environment:
+#          PGHOST: 127.0.0.1
+#          DATABASE_URL: "postgis://postgres:postgres@localhost:5432/test_sir"
+#      - image: circleci/postgres:9.6-alpine-postgis
+#        environment:
+#          POSTGRES_USER: postgres
+#          PGUSER: postgres
+#          POSTGRES_DB: test_sir
+#          POSTGRES_PASSWORD: postgres
+#    steps:
+#      - checkout
+#      - run:
+#          name: run tests
+#          command: |
+#            export PATH=$PATH:/home/circleci/.local/bin
+#            pip install tox --user
+#            tox -re py36-d20
+#      - run:
+#          name: Building the image
+#          command: |
+#            TAG=${CIRCLE_BRANCH}
+#            docker build -t unicef/sir-backend:$TAG .
+
+workflows:
+  version: 2
+  build_and_package:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+#      - release:
+#          filters:
+#            tags:
+#              only: master
