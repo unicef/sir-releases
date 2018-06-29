@@ -10,15 +10,8 @@ jobs:
       - run:
           name: build
           command: |
-            set -x
-            apk update && apk add curl curl-dev bash jq sed
-            . update.sh
-            docker build
-                    --build-arg GITHUB_CREDENTIALS=${GITHUB_CREDENTIALS} \
-                    -t unicef/sir-backend:${BACKEND_VERSION} \
-                    -f Dockerfile .
-            docker images
-
+            apk update && apk add curl bash jq sed
+            env | sort
 #    docker:
 #      - image: circleci/python:3.6
 #        environment:
