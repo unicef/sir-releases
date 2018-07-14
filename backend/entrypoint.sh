@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/sh -e
 set -e
 
 if [ ! -f /var/sir/.bootstrapped ]; then
