@@ -1,12 +1,7 @@
 FROM python:3-alpine as builder
 
-ARG PYPI_SERVER="pypi.org"
-ARG PYPI_INDEX="https://$PYPI_SERVER/simple/"
 ARG GITHUB_CREDENTIALS
 ARG BACKEND_VERSION
-
-ENV PYPI_SERVER ${PYPI_SERVER}
-ENV PYPI_INDEX ${PYPI_INDEX}
 
 ENV HOME /root/
 ENV PIPSI_HOME /usr/local/pipsi/environments
@@ -42,7 +37,7 @@ RUN mkdir -p /usr/local/sir
 WORKDIR /usr/local/src/sir
 RUN echo curl -L -u ${GITHUB_CREDENTIALS} "https://github.com/unicef/sir-poc/tarball/${BACKEND_VERSION}"
 RUN curl -L -u ${GITHUB_CREDENTIALS} "https://github.com/unicef/sir-poc/tarball/${BACKEND_VERSION}" | tar -xzf - --strip-components=1 \
-    && pipenv install --system --deploy --pypi-mirror ${PYPI_INDEX}\
+    && pipenv install --system --deploy \
     && pip install .
 
 FROM python:3-alpine

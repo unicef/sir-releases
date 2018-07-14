@@ -16,9 +16,8 @@ builder:
 
 build:
 	docker build ${BUILD_OPTIONS} \
-			--build-arg PYPI_SERVER=${PYPI_SERVER} \
-			--build-arg PYPI_INDEX=${PYPI_INDEX} \
 			--build-arg GITHUB_CREDENTIALS=${GITHUB_CREDENTIALS} \
+			--build-arg BACKEND_VERSION=${TARGET} \
 			-t ${DOCKER_IMAGE}:${TARGET} \
 			-f Dockerfile .
 
