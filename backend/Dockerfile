@@ -35,8 +35,7 @@ RUN pip install -U pip \
 
 RUN mkdir -p /usr/local/sir
 WORKDIR /usr/local/src/sir
-RUN echo curl -L -u ${GITHUB_CREDENTIALS} "https://github.com/unicef/sir-poc/tarball/${BACKEND_VERSION}"
-RUN curl -L -u ${GITHUB_CREDENTIALS} "https://github.com/unicef/sir-poc/tarball/${BACKEND_VERSION}" | tar -xzf - --strip-components=1 \
+RUN curl -L -u ${GITHUB_CREDENTIALS} "https://github.com/unicef/sir-poc/archive/${BACKEND_VERSION}.tar.gz" | tar -xzf - --strip-components=1 \
     && pipenv install --system --deploy \
     && pip install .
 
