@@ -14,9 +14,12 @@ builder:
 			-t ${DOCKER_IMAGE} \
 			-f ${DOCKERFILE} .
 
+clean:
+	-docker rmi ${DOCKER_IMAGE}:${TARGET}
+
 build:
 	docker build ${BUILD_OPTIONS} \
-			--build-arg GITHUB_CREDENTIALS=${GITHUB_CREDENTIALS} \
+			--build-arg GITHUB_CREDENTIALS=${GITHUB_TOKEN}: \
 			--build-arg BACKEND_VERSION=${TARGET} \
 			-t ${DOCKER_IMAGE}:${TARGET} \
 			-f Dockerfile .

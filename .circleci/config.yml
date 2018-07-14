@@ -3,49 +3,78 @@ jobs:
   build:
     working_directory: ~/code
     docker:
-      - image: docker:17.06.1-ce-git
-#      - image: python3:alpine
+      - image: alpine:3.7
     steps:
       - checkout
       - run:
+          name: setup
+          command: |
+              apk update && apk add -q curl bash jq sed
+              env | sort
+      - run:
           name: build
           command: |
-            apk update && apk add curl bash jq sed
-            env | sort
-#    docker:
-#      - image: circleci/python:3.6
-#        environment:
-#          PGHOST: 127.0.0.1
-#          DATABASE_URL: "postgis://postgres:postgres@localhost:5432/test_sir"
-#      - image: circleci/postgres:9.6-alpine-postgis
-#        environment:
-#          POSTGRES_USER: postgres
-#          PGUSER: postgres
-#          POSTGRES_DB: test_sir
-#          POSTGRES_PASSWORD: postgres
-#    steps:
-#      - checkout
-#      - run:
-#          name: run tests
-#          command: |
-#            export PATH=$PATH:/home/circleci/.local/bin
-#            pip install tox --user
-#            tox -re py36-d20
-#      - run:
-#          name: Building the image
-#          command: |
-#            TAG=${CIRCLE_BRANCH}
-#            docker build -t unicef/sir-backend:$TAG .
+            get_release_info() {
+                curl \
+                    --silent \
+                    -H "Authorization: token ${GITHUB_TOKEN}" \
+                    "https://api.github.com/repos/unicef/sir-poc/releases/tags/$1" | jq -r '.body'
+            }
+            INFO=`get_release_info $TAG`
 
-workflows:
-  version: 2
-  build_and_package:
-    jobs:
-      - build:
-          filters:
-            tags:
-              only: /.*/
-#      - release:
-#          filters:
-#            tags:
-#              only: master
+            echo $INFO
+  backend:
+    working_directory: ~/code
+    docker:
+      - image: docker:17.05.0-ce-git
+        environment:
+          PGHOST: 127.0.0.1
+          PIPENV_VENV_IN_PROJECT: 1
+          DATABASE_URL: "postgres://postgres:postgres@127.0.0.1:5432/test_sir"
+      - image: circleci/postgres:9.6-alpine-postgis
+        environment:
+          POSTGRES_USER: postgres
+          PGUSER: postgres
+          POSTGRES_DB: test_sir
+          POSTGRES_PASSWORD: postgres
+
+    environment:
+      DOCKER_IMAGE: unicef/sir-be
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: build docker image
+          command: |
+            env | sort
+            cd backend
+            docker build  \
+                    --build-arg GITHUB_CREDENTIALS=${GITHUB_CREDENTIALS} \
+                    --build-arg BACKEND_VERSION=${TAG} \
+                    -t ${DOCKER_IMAGE}:${TAG} \
+                    -f Dockerfile .
+            docker images
+      - run:
+          name: test image
+          command: |
+              docker run -p 8000:8000 --rm \
+                      -e DATABASE_URL=${DATABASE_URL} \
+                      -e DEBUG=0 \
+                      -e SECURE_SSL_REDIRECT=0 \
+                      -e SESSION_COOKIE_SECURE=0 \
+                      -e SESSION_COOKIE_HTTPONLY=9 \
+                      -e SESSION_COOKIE_HTTPONLY=0 \
+                      -e CSRF_COOKIE_SECURE=0 \
+                      -v $PWD/tmp/sir/:/var/sir/ \
+                      -it ${DOCKER_IMAGE}:${TAG} \
+                      django-admin check --deploy
+      - deploy:
+          name: Push application Docker image
+          command: |
+              git tag -a -m "backend/$TAG" $TAG
+              docker tag ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGE}:${TAG}
+              docker tag ${DOCKER_IMAGE}:latest ${DOCKER_IMAGE}:${TAG}
+              docker push ${DOCKER_IMAGE}:latest
+              docker push ${DOCKER_IMAGE}:${TAG}
+
+
