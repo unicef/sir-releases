@@ -14,6 +14,7 @@ jobs:
       - run:
           name: build
           command: |
+            export TAG=${TAG:=latest}
             get_release_info() {
                 curl \
                     --silent \
@@ -47,13 +48,12 @@ jobs:
             - "2b:6f:56:d6:6d:01:3d:81:44:3f:81:98:e9:ef:fe:ff"
       - setup_remote_docker
       - run:
-          name: build docker image
+          name: Build Backend docker image 'unicef/sir-fe'
           command: |
             if [ -z "$TAG" ];then
               echo "Tag not set. exit"
               exit 1
             fi
-            env | sort
             cd backend
             docker build  \
                     --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} \
@@ -62,7 +62,7 @@ jobs:
                     -f Dockerfile .
             docker images
       - run:
-          name: test image
+          name: Test Backend docker image
           command: |
               docker run -p 8000:8000 --rm \
                       -e DATABASE_URL=${DATABASE_URL} \
@@ -76,18 +76,27 @@ jobs:
                       -it ${DOCKER_IMAGE}:${TAG} \
                       django-admin check --deploy
       - deploy:
-          name: Push application Docker image
+          name: Push Backend docker image
           command: |
-              git config --global user.email "ci@unicef.org"
-              git config --global user.name "ci"
+              export TODAY=`date '+%d %B %Y at %H:%M'`
 
-              git tag -a -m "backend/$TAG" $TAG
+              git config --global user.email "ci@unicef.org"
+              git config --global user.name "CI"
+              echo "$TODAY Frontend $TAG released" | cat - CHANGES > temp && mv temp CHANGES
+              git add CHANGES
+              git commit -m "Released frontend v$TAG"
+              git push
+              git tag -a -m "frontend/$TAG" frontend/$TAG
               git push --tags
 
-              docker tag ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGE}:${TAG}
-              docker tag ${DOCKER_IMAGE}:latest ${DOCKER_IMAGE}:${TAG}
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+              docker tag ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGE}:latest
               docker push ${DOCKER_IMAGE}:latest
               docker push ${DOCKER_IMAGE}:${TAG}
+
+
+
   frontend:
     working_directory: ~/code
     docker:
@@ -101,9 +110,12 @@ jobs:
             - "2b:6f:56:d6:6d:01:3d:81:44:3f:81:98:e9:ef:fe:ff"
       - setup_remote_docker
       - run:
-          name: build docker image
+          name: Build Frontend docker image 'unicef/sir-fe'
           command: |
-            env | sort
+            if [ -z "$TAG" ];then
+              echo "Tag not set. exit"
+              exit 1
+            fi
             cd frontend
             docker build  \
                     --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} \
@@ -112,18 +124,27 @@ jobs:
                     -f Dockerfile .
             docker images
       - run:
-          name: test image
+          name: Test Frontend docker image
           command: |
-              docker run
+              docker run \
                       -it ${DOCKER_IMAGE}:${TAG} \
                       polymer lint
       - deploy:
-          name: Push application Docker image
+          name: Push Frontend docker image
           command: |
+              export TODAY=`date '+%d %B %Y at %H:%M'`
+
+              git config --global user.email "ci@unicef.org"
+              git config --global user.name "CI"
+              echo "$TODAY Frontend $TAG released" | cat - CHANGES > temp && mv temp CHANGES
+              git add CHANGES
+              git commit -m "Released frontend v$TAG"
+              git push
               git tag -a -m "frontend/$TAG" frontend/$TAG
-              docker tag ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGE}:${TAG}
-              docker tag ${DOCKER_IMAGE}:latest ${DOCKER_IMAGE}:${TAG}
+              git push --tags
+
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+              docker tag ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGE}:latest
               docker push ${DOCKER_IMAGE}:latest
               docker push ${DOCKER_IMAGE}:${TAG}
-
-
