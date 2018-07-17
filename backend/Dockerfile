@@ -1,13 +1,13 @@
 FROM python:3-alpine as builder
 
-ARG GITHUB_CREDENTIALS
+ARG GITHUB_TOKEN
 ARG BACKEND_VERSION
 
 ENV HOME /root/
 ENV PIPSI_HOME /usr/local/pipsi/environments
 ENV PIPSI_BIN_DIR /usr/local/bin
 ENV BACKEND_VERSION $BACKEND_VERSION
-ENV GITHUB_CREDENTIALS $GITHUB_CREDENTIALS
+ENV GITHUB_TOKEN $GITHUB_TOKEN
 
 
 RUN apk add --no-cache  \
@@ -35,7 +35,8 @@ RUN pip install -U pip \
 
 RUN mkdir -p /usr/local/sir
 WORKDIR /usr/local/src/sir
-RUN curl -L -u ${GITHUB_CREDENTIALS} "https://github.com/unicef/sir-poc/archive/${BACKEND_VERSION}.tar.gz" | tar -xzf - --strip-components=1 \
+
+RUN curl -L -u "${GITHUB_TOKEN}:" "https://github.com/unicef/sir-poc/archive/${BACKEND_VERSION}.tar.gz" | tar -xzf - --strip-components=1 \
     && pipenv install --system --deploy \
     && pip install .
 
