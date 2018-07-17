@@ -1,13 +1,18 @@
-SIR Docker releases
+SIR Docker images
 ===================
 
 This repository contains Dockerfiles relatet to SIR project.
 
-- Backend: https://github.com/unicef/sir-poc/
-- Frontend: https://github.com/unicef/sir-poc-fe/
+- **Backend**: https://github.com/unicef/sir-poc/
+- **Frontend**: https://github.com/unicef/sir-poc-fe/
  
+After build, images will be availabkle at:
 
-#### Trigger build:
+- **Backend**: https://hub.docker.com/r/unicef/sir-be/
+- **Frontend**: https://hub.docker.com/r/unicef/sir-fe/
+
+
+### Trigger build:
     
 To manually trigger a build you need:
 
