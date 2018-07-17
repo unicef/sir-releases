@@ -1,16 +1,11 @@
 SIR Docker images
 ===================
 
-This repository contains Dockerfiles relatet to SIR project.
+This repository contains Dockerfiles related to SIR project.
 
 - **Backend**: https://github.com/unicef/sir-poc/
 - **Frontend**: https://github.com/unicef/sir-poc-fe/
  
-After build, images will be availabkle at:
-
-- **Backend**: https://hub.docker.com/r/unicef/sir-be/
-- **Frontend**: https://hub.docker.com/r/unicef/sir-fe/
-
 
 ### Trigger build:
     
@@ -30,3 +25,12 @@ To manually trigger a build you need:
         --form config=@$PWD.circleci/config.yml \
         --form notify=false \
             https://circleci.com/api/v1.1/project/github/unicef/sir-releases/tree/develop
+
+
+### Docker HUB repositories:
+
+After build, images will be availabkle at:
+
+- **Backend**: https://hub.docker.com/r/unicef/sir-be/
+- **Frontend**: https://hub.docker.com/r/unicef/sir-fe/
+
