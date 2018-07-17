@@ -92,11 +92,6 @@ jobs:
     working_directory: ~/code
     docker:
       - image: docker:17.05.0-ce-git
-        environment:
-          PGHOST: 127.0.0.1
-          PIPENV_VENV_IN_PROJECT: 1
-          DATABASE_URL: "postgres://postgres:postgres@127.0.0.1:5432/test_sir"
-
     environment:
       DOCKER_IMAGE: unicef/sir-fe
     steps:
@@ -112,28 +107,20 @@ jobs:
             cd frontend
             docker build  \
                     --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} \
-                    --build-arg FRONTEND_VERSION=${TAG} \
+                    --build-arg VERSION=${TAG} \
                     -t ${DOCKER_IMAGE}:${TAG} \
                     -f Dockerfile .
             docker images
       - run:
           name: test image
           command: |
-              docker run -p 8000:8000 --rm \
-                      -e DATABASE_URL=${DATABASE_URL} \
-                      -e DEBUG=0 \
-                      -e SECURE_SSL_REDIRECT=0 \
-                      -e SESSION_COOKIE_SECURE=0 \
-                      -e SESSION_COOKIE_HTTPONLY=9 \
-                      -e SESSION_COOKIE_HTTPONLY=0 \
-                      -e CSRF_COOKIE_SECURE=0 \
-                      -v $PWD/tmp/sir/:/var/sir/ \
+              docker run
                       -it ${DOCKER_IMAGE}:${TAG} \
-                      django-admin check --deploy
+                      polymer lint
       - deploy:
           name: Push application Docker image
           command: |
-              git tag -a -m "backend/$TAG" $TAG
+              git tag -a -m "frontend/$TAG" frontend/$TAG
               docker tag ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGE}:${TAG}
               docker tag ${DOCKER_IMAGE}:latest ${DOCKER_IMAGE}:${TAG}
               docker push ${DOCKER_IMAGE}:latest

@@ -36,7 +36,7 @@ push:
 
 test:
 #	CMD="\"sh -c \'python -c \\\"import sir\'\\\"\"" $(MAKE) run
-	CMD='django-admin check --deploy' $(MAKE) run
+	CMD='polymer lint' $(MAKE) run
 
 shell:
 #	CMD="\"sh -c \'python -c \\\"import sir\'\\\"\"" $(MAKE) run
