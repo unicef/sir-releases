@@ -42,7 +42,7 @@ RUN curl -L -u "${GITHUB_TOKEN}:" "https://github.com/unicef/sir-poc/archive/${B
 
 FROM python:3-alpine
 
-ENV DJANGO_SETTINGS_MODULE sir.config.settings.default
+ENV DJANGO_SETTINGS_MODULE sir.config.settings
 ENV PYTHONUNBUFFERED 1
 ENV SESSION_COOKIE_SECURE 1
 ENV CSRF_COOKIE_SECURE 1
