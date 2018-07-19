@@ -82,11 +82,11 @@ jobs:
 
               git config --global user.email "ci@unicef.org"
               git config --global user.name "CI"
-              echo "$TODAY Frontend $TAG released" | cat - CHANGES > temp && mv temp CHANGES
+              echo "$TODAY Backend $TAG released" | cat - CHANGES > temp && mv temp CHANGES
               git add CHANGES
-              git commit -m "Released frontend v$TAG"
+              git commit -m "Released Backend v$TAG"
               git push
-              git tag -a -m "frontend/$TAG" frontend/$TAG
+              git tag -a -m "backend/$TAG" backend/$TAG
               git push --tags
 
               docker login -u $DOCKER_USER -p $DOCKER_PASS
