@@ -14,14 +14,14 @@ jobs:
       - run:
           name: build
           command: |
-            export TAG=${TAG:=latest}
+            export BUILD_TAG=${BUILD_TAG:=latest}
             get_release_info() {
                 curl \
                     --silent \
                     -H "Authorization: token ${GITHUB_TOKEN}" \
                     "https://api.github.com/repos/unicef/sir-poc/releases/tags/$1" | jq -r '.body'
             }
-            INFO=`get_release_info $TAG`
+            INFO=`get_release_info $BUILD_TAG`
 
             echo $INFO
   backend:
@@ -50,15 +50,15 @@ jobs:
       - run:
           name: Build Backend docker image 'unicef/sir-fe'
           command: |
-            if [ -z "$TAG" ];then
+            if [ -z "$BUILD_TAG" ];then
               echo "Tag not set. exit"
               exit 1
             fi
             cd backend
             docker build  \
                     --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} \
-                    --build-arg BACKEND_VERSION=${TAG} \
-                    -t ${DOCKER_IMAGE}:${TAG} \
+                    --build-arg BACKEND_VERSION=${BUILD_TAG} \
+                    -t ${DOCKER_IMAGE}:${BUILD_TAG} \
                     -f Dockerfile .
             docker images
       - run:
@@ -73,7 +73,7 @@ jobs:
                       -e SESSION_COOKIE_HTTPONLY=0 \
                       -e CSRF_COOKIE_SECURE=0 \
                       -v $PWD/tmp/sir/:/var/sir/ \
-                      -it ${DOCKER_IMAGE}:${TAG} \
+                      -it ${DOCKER_IMAGE}:${BUILD_TAG} \
                       django-admin check --deploy
       - deploy:
           name: Push Backend docker image
@@ -82,18 +82,18 @@ jobs:
 
               git config --global user.email "ci@unicef.org"
               git config --global user.name "CI"
-              echo "$TODAY Backend $TAG released" | cat - CHANGES > temp && mv temp CHANGES
+              echo "$TODAY Backend $BUILD_TAG released" | cat - CHANGES > temp && mv temp CHANGES
               git add CHANGES
-              git commit -m "Released Backend v$TAG"
+              git commit -m "Released Backend v$BUILD_TAG"
               git push
-              git tag -a -m "backend/$TAG" backend/$TAG
+              git tag -a -m "backend/$BUILD_TAG" backend/$BUILD_TAG
               git push --tags
 
               docker login -u $DOCKER_USER -p $DOCKER_PASS
 
-              docker tag ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGE}:latest
+              docker tag ${DOCKER_IMAGE}:${BUILD_TAG} ${DOCKER_IMAGE}:latest
               docker push ${DOCKER_IMAGE}:latest
-              docker push ${DOCKER_IMAGE}:${TAG}
+              docker push ${DOCKER_IMAGE}:${BUILD_TAG}
 
 
 
@@ -112,22 +112,23 @@ jobs:
       - run:
           name: Build Frontend docker image 'unicef/sir-fe'
           command: |
-            if [ -z "$TAG" ];then
+            env | sort
+            if [ -z "$BUILD_TAG" ];then
               echo "Tag not set. exit"
               exit 1
             fi
             cd frontend
             docker build  \
                     --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} \
-                    --build-arg VERSION=${TAG} \
-                    -t ${DOCKER_IMAGE}:${TAG} \
+                    --build-arg VERSION=${BUILD_TAG} \
+                    -t ${DOCKER_IMAGE}:${BUILD_TAG} \
                     -f Dockerfile .
             docker images
       - run:
           name: Test Frontend docker image
           command: |
               docker run \
-                      -it ${DOCKER_IMAGE}:${TAG} \
+                      -it ${DOCKER_IMAGE}:${BUILD_TAG} \
                       polymer lint
       - deploy:
           name: Push Frontend docker image
@@ -136,15 +137,15 @@ jobs:
 
               git config --global user.email "ci@unicef.org"
               git config --global user.name "CI"
-              echo "$TODAY Frontend $TAG released" | cat - CHANGES > temp && mv temp CHANGES
+              echo "$TODAY Frontend $ released" | cat - CHANGES > temp && mv temp CHANGES
               git add CHANGES
-              git commit -m "Released frontend v$TAG"
+              git commit -m "Released frontend v$BUILD_TAG"
               git push
-              git tag -a -m "frontend/$TAG" frontend/$TAG
+              git tag -a -m "frontend/$BUILD_TAG" frontend/$BUILD_TAG
               git push --tags
 
               docker login -u $DOCKER_USER -p $DOCKER_PASS
 
-              docker tag ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGE}:latest
+              docker tag ${DOCKER_IMAGE}:${BUILD_TAG} ${DOCKER_IMAGE}:latest
               docker push ${DOCKER_IMAGE}:latest
-              docker push ${DOCKER_IMAGE}:${TAG}
+              docker push ${DOCKER_IMAGE}:${BUILD_TAG}
