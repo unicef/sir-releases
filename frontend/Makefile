@@ -1,16 +1,13 @@
 CMD?=
-TARGET?=1.0a
+TARGET?=not_set
 DOCKER_IMAGE=unicef/sir-fe
 DOCKERFILE?=Dockerfile
 BUILD_OPTIONS?=--squash --rm
 
-builder:
-	docker build ${BUILD_OPTIONS} \
-			--target builder \
-			--build-arg PYPI_SERVER=${PYPI_SERVER} \
-			--build-arg PYPI_INDEX=${PYPI_INDEX} \
-			-t ${DOCKER_IMAGE} \
-			-f ${DOCKERFILE} .
+
+help:
+	echo ""
+
 
 clean:
 	-docker rmi ${DOCKER_IMAGE}:${TARGET}
@@ -28,6 +25,7 @@ run:
 			${CMD}
 
 push:
+	docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
 	docker tag ${DOCKER_IMAGE}:${TARGET} ${DOCKER_IMAGE}:${TARGET}
 	docker tag ${DOCKER_IMAGE}:${TARGET} ${DOCKER_IMAGE}:latest
 	docker push ${DOCKER_IMAGE}:${TARGET}

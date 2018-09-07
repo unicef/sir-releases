@@ -1,10 +1,13 @@
 CMD?=
-TARGET?=1.0a
+TARGET?=not_set
 PYPI_SERVER?="pypi.org"
 PYPI_INDEX?="https://${PYPI_SERVER}/simple/"
 DOCKER_IMAGE=unicef/sir-be
 DOCKERFILE?=Dockerfile
 BUILD_OPTIONS?=--squash --rm
+
+help:
+	echo ""
 
 builder:
 	docker build ${BUILD_OPTIONS} \
@@ -39,6 +42,7 @@ run:
 			-it ${DOCKER_IMAGE}:${TARGET} \
 			${CMD}
 push:
+	docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
 	docker tag ${DOCKER_IMAGE}:${TARGET} ${DOCKER_IMAGE}:${TARGET}
 	docker tag ${DOCKER_IMAGE}:${TARGET} ${DOCKER_IMAGE}:latest
 	docker push ${DOCKER_IMAGE}:${TARGET}
