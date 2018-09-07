@@ -41,6 +41,7 @@ jobs:
 
     environment:
       DOCKER_IMAGE: unicef/sir-be
+      CIRCLE_BRANCH: backend
     steps:
       - checkout
       - add_ssh_keys:
@@ -48,8 +49,16 @@ jobs:
             - "2b:6f:56:d6:6d:01:3d:81:44:3f:81:98:e9:ef:fe:ff"
       - setup_remote_docker
       - run:
+          name: Echo environment
+          command: |
+            env | sort
+      - run:
           name: Build Backend docker image 'unicef/sir-fe'
           command: |
+            if [ -z "$BUILD_TAG" ];then
+              BUILD_TAG=$TAG
+            fi
+
             if [ -z "$BUILD_TAG" ];then
               echo "Tag not set. exit"
               exit 1
@@ -103,6 +112,8 @@ jobs:
       - image: docker:17.05.0-ce-git
     environment:
       DOCKER_IMAGE: unicef/sir-fe
+      CIRCLE_BRANCH: frontend
+
     steps:
       - checkout
       - add_ssh_keys:
@@ -110,9 +121,12 @@ jobs:
             - "2b:6f:56:d6:6d:01:3d:81:44:3f:81:98:e9:ef:fe:ff"
       - setup_remote_docker
       - run:
-          name: Build Frontend docker image 'unicef/sir-fe'
+          name: Echo environment
           command: |
             env | sort
+      - run:
+          name: Build Frontend docker image 'unicef/sir-fe'
+          command: |
             if [ -z "$BUILD_TAG" ];then
               echo "Tag not set. exit"
               exit 1
@@ -127,6 +141,7 @@ jobs:
       - run:
           name: Test Frontend docker image
           command: |
+              echo "Testing ${DOCKER_IMAGE}:${BUILD_TAG}"
               docker run \
                       -it ${DOCKER_IMAGE}:${BUILD_TAG} \
                       polymer lint
